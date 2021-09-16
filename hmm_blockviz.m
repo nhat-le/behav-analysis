@@ -1,5 +1,6 @@
 % For visualizing the block structures from an animal through training
-filedir = '/Users/minhnhatle/Dropbox (MIT)/Nhat/animalHMMData/animalData_f02.mat';
+filedir = 'C:\Users\Cherry Wang\Dropbox (MIT)\Nhat\animalHMMData\animalData_f03.mat';
+% filedir = 'C:\Users\Cherry Wang\Desktop\UROP-Nhat\HMM\animalData_f01.mat';
 load(filedir)
 name = animalData.name;
 
@@ -55,29 +56,73 @@ end
 
 aggStates(isnan(aggStates)) = 4;
 
+delay_rep = reshape(animalData.delays, numel(animalData.delays), 1);
+
 
 %% Plot
 figure;
+ax1 = subplot(121);
 imagesc(aggStates);
-title(name);
+title('HMM across sessions back at no delay');
 xlabel('Trials')
 ylabel('Session')
-set(gca, 'FontSize', 16)
+set(gca, 'FontSize', 12)
 colormap jet
 
 %%
-visualize_cell(probsAll, name)
+ax2 = subplot(122);
+d_delays = diff(animalData.delays);
+d_delays = [0 d_delays];
+sessions = 1:numel(animalData.delays);
+% plot(animalData.delays);
+plot(animalData.delays, sessions)
+set(gca, 'YDir','reverse')
+title('Delays applied across sessions')
 
+linkaxes([ax1, ax2], 'y')
 
 %%
-figure
-imagesc(peaks(250));
-colormap(bluewhitered(256)), colorbar
+figure; 
+state1 = aggStates == 1;
+state2 = aggStates == 2;
+state3 = aggStates == 3;
+ax3 = subplot(211);
+plot(find_average(aggStates, 1), 'LineWidth', 2);
+hold on
+% plot(find_average(aggStates, 2), 'LineWidth', 2);
 
+hold on
+plot(find_average(aggStates, 3), 'LineWidth', 2);
+hold off
+title('Average duration of exploration');
+xlabel('Sessions');
+ylabel('Trials');
 
+% legend('Right state', 'Exploratory state', 'Left state');
+ax4 = subplot(212);
+plot(animalData.delays);
+xlabel('Sessions');
+ylabel('Delays (sec)');
+linkaxes([ax3, ax4], 'x')
+
+title('Delays across sessions');
+
+function state_avg_len = find_average(aggStates, state_num)
+    state_logical = aggStates == state_num;
+    states_sum = sum(state_logical, 2);
+    state_changes = state_logical(:,1);
+    state_changes = double(state_changes);
+    for i = 1:numel(state_changes)
+        stuff = find(diff(state_logical(i,:)) ~=0);
+        state_changes(i) = (numel(stuff) +1)/2;
+    end
+    state_avg_len = states_sum./state_changes;
+
+end
 function maxstates = get_currstate(arr)
 % get the current state
-maxstates = argmax(arr);
+[~, argmax] = max(arr);
+maxstates = argmax;
 end
 
 
@@ -108,15 +153,15 @@ aggStates(isnan(aggStates)) = 4;
 
 
 %% Plot
-figure;
-imagesc(aggStates * 2 - 1);
-title(name);
-xlabel('Trials')
-ylabel('Session')
-set(gca, 'FontSize', 16)
-% colormap(bluewhitered(256))
-caxis([-1,1])
-colormap(bluewhitered(256))
+% figure;
+% imagesc(aggStates * 2 - 1);
+% title(name);
+% xlabel('Trials')
+% ylabel('Session')
+% set(gca, 'FontSize', 16)
+% % colormap(bluewhitered(256))
+% caxis([-1,1])
+% colormap(jet)
 
 
 end
